@@ -1,9 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import csv
 import re
 import os
 import sys
-import cStringIO
 import datetime
 import json
 #import pprint
@@ -36,9 +35,9 @@ def transcode(row, nline):
     for n, val in enumerate(row):
         if n >= len(header):
             if val:
-                 print 'warning: troppi campi, linea %s' % nline
+                 print('warning: troppi campi, linea %s' % nline)
                  r['#unknow %s' % n] = val
-                 #print r
+                 #print(r)
             continue
 
         r[header[n]] = val
@@ -50,17 +49,17 @@ def showline(n, r, options):
     op = options[0] if len(options) else None
 
     if op == 'ln':
-        print 'line %s' % n, r
+        print('line %s' % n, r)
     else:
-        print '-' * 10, n, '-' * 10
+        print('-' * 10, n, '-' * 10)
         done = set()
         for k in header:
             done.add(k)
-            print '   %s: %s' % (repr(k), repr(r[k]) if k in r else '<null>')
+            print('   %s: %s' % (repr(k), repr(r[k]) if k in r else '<null>'))
 
         for k in r:
             if k not in done:
-                print '   %s:: %s' % (repr(k), repr(r[k]) if k in r else '<null>')
+                print('   %s:: %s' % (repr(k), repr(r[k]) if k in r else '<null>'))
 
 
         print
@@ -69,9 +68,9 @@ def showline(n, r, options):
 def showheader(n, r, options):
     if n == 0:
         hr = repr(header)
-        print 'header(%d) = %s' % (len(header), hr)
-        print 'header checksum crc32 = %s' % (hex(crc32(hr) % (1<<32)))
-        print 'header checksum md5 = %s' % md5(hr).hexdigest()
+        print('header(%d) = %s' % (len(header), hr))
+        print('header checksum crc32 = %s' % (hex(crc32(hr) % (1<<32))))
+        print('header checksum md5 = %s' % md5(hr).hexdigest())
 
 
 def showcol(n, r, ln, options):
@@ -81,9 +80,9 @@ def showcol(n, r, ln, options):
     cols = '|'.join([r[k] for k in options])
 
     if ln:
-        print n, cols
+        print(n, cols)
     else:
-        print cols
+        print(cols)
 
 
 def loadfilters():
@@ -109,7 +108,7 @@ def loadfilters():
 
             if fromfile:
                 with open(values) as f:
-                    print 'open file', values
+                    print('open file', values)
                     fvalues = f.read().split('\n')
 
                     for fv in fvalues:
@@ -151,10 +150,16 @@ def filterby(r):
     return ok
 
 
-def csvline(r, sep, header):
+def csvline(row, sep, header = None):
+    # TODO port to python3
+    import cStringIO
     queue = cStringIO.StringIO()
     writer = csv.writer(queue, delimiter=sep)
-    writer.writerow([r[k] for k in header])
+    if header:
+        writer.writerow([row[k] for k in header])
+    else:
+        writer.writerow(row)
+
     return queue.getvalue()
 
 def splitby_flush(state, sep):
@@ -162,14 +167,14 @@ def splitby_flush(state, sep):
     outfile += '_' + state['csvfile']
 
     if 'counter' not in state:
-        print 'skip flush', outfile, 'manca counter'
+        print('skip flush', outfile, 'manca counter')
         return
  
     if state['counter'] == 0:
-        print 'skip flush', outfile, 'nessuna linea'
+        print('skip flush', outfile, 'nessuna linea')
         return
 
-    print 'writing file %s ...' % outfile
+    print('writing file %s ...' % outfile)
     with open(outfile, 'w') as f:
         writer = csv.writer(f, delimiter=sep)
 
@@ -195,11 +200,11 @@ def splitby(state, nline, row, sep, options):
         chunksize = int(options[1])
     
     if key not in row:
-        print 'chiave di split primaria %s non trovata sulla riga'
+        print('chiave di split primaria %s non trovata sulla riga')
         sys.exit(0)
 
     if 'chunk' not in state: #nline == 0:
-        print 'split su chiave primaria %s ogni %s linee' % (key, chunksize)
+        print('split su chiave primaria %s ogni %s linee' % (key, chunksize))
         state['chunk'] = 0
         state['counter'] = 0
         state['lines'] = []
@@ -223,7 +228,7 @@ def delcol(state, n, r, options):
         head = list(header)
         for todel in options:
             if todel not in head:
-                print 'ERROR: colonna %s non trovata' % todel
+                print('ERROR: colonna %s non trovata' % todel)
             else:
                 head.remove(todel)
 
@@ -239,7 +244,7 @@ def delcol_flush(state, sep):
     outfile = re.sub('[^0-9]', '-', datetime.datetime.now().isoformat())
     outfile += '_' + state['csvfile']
 
-    print 'writing file %s ...' % outfile
+    print('writing file %s ...' % outfile)
 
     with open(outfile, 'w') as f:
         writer = csv.writer(f, delimiter=sep)
@@ -266,7 +271,7 @@ def tojson_flush(state, sep, options):
     outfile = re.sub('[^0-9]', '-', datetime.datetime.now().isoformat())
     outfile += '_' + state['csvfile'] + '.json'
 
-    print 'writing file %s ...' % outfile
+    print('writing file %s ...' % outfile)
     compact = False
 
     op = options[0] if len(options) else None
@@ -274,7 +279,7 @@ def tojson_flush(state, sep, options):
         if op == 'compact':
             compact = True
         else:
-            print 'WARNING: opzione "%s" sconosciuta' % op
+            print('WARNING: opzione "%s" sconosciuta' % op)
 
     with open(outfile, 'w') as f:
         if compact:
@@ -310,7 +315,7 @@ def rawsplit(csvfile, options):
 
                 i += 1
 
-        print 'scritte %s lines su %s' % (i, outfile1)
+        print('scritte %s lines su %s' % (i, outfile1))
 
         i = 0
         with open(outfile2, 'w') as f2:
@@ -323,7 +328,7 @@ def rawsplit(csvfile, options):
                 f2.write(line)
                 i += 1
 
-        print 'scritte %s lines su %s' % (i, outfile2)
+        print('scritte %s lines su %s' % (i, outfile2))
 
 
 def process(csvfile, mode, options):
@@ -335,11 +340,7 @@ def process(csvfile, mode, options):
 
     with open(csvfile) as f:
         sep = separator(f)
-        for n, raw in enumerate(f):
-            #print '-' * 40, '\n', raw, '-' * 40
-
-            row = csv.reader([raw], delimiter=sep).next()
-
+        for n, row in enumerate(csv.reader(f, delimiter=sep)):
             r = transcode(row, n)
 
             if not filterby(r) and n > 0:
@@ -356,13 +357,13 @@ def process(csvfile, mode, options):
             elif mode == 'delcol':
                 delcol(state, n, r, options)
             elif mode == 'csv':
-                print raw,
+                print(csvline(row, sep))
             elif mode == 'json':
                 tojson(state, n, r, options)
             elif mode == 'splitby':
                 splitby(state, n, r, sep, options) 
             else:
-                print "unknow mode"
+                print("unknow mode")
                 usage()
 
     if mode == 'splitby':
@@ -372,7 +373,7 @@ def process(csvfile, mode, options):
     elif mode == 'json':
         tojson_flush(state, sep, options)
     elif mode == 'check':
-        print 'linee totali', n
+        print('linee totali', n)
 
 def usage():
     usg = """
@@ -394,7 +395,7 @@ def usage():
             FWHITE="columnkey|filename" #PROG# file.csv csv
     """
 
-    print usg.replace('#PROG#', sys.argv[0].split('/')[-1])
+    print(usg.replace('#PROG#', sys.argv[0].split('/')[-1]))
     sys.exit(0)
 
 argv = sys.argv[1:]
